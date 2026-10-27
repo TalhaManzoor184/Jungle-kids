@@ -1,0 +1,100 @@
+name: Daily Jungle Kids reel
+
+on:
+  schedule:
+    # GitHub starts cron jobs late or skips them, so try three times before the 6:00 PM PKT slot:
+    # 1:13 PM, 2:43 PM and 4:07 PM PKT. Each run checks data/history.json and does nothing if today's
+    # reel is already uploaded, so only one video goes out per day.
+    - cron: "13 8 * * *"
+    - cron: "43 9 * * *"
+    - cron: "7 11 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: >-
+          full = real reel, public at PUBLISH_TIME · publish-now = real reel, public immediately ·
+          no-upload = real reel, kept as a download only · test = sample episode + still frames, needs no keys ·
+          upload-test = sample + still frames uploaded PRIVATE to YouTube (checks the YouTube keys) ·
+          plan = inbox mode, write today's Flow prompts
+        type: choice
+        options: [full, publish-now, no-upload, test, upload-test, plan]
+        default: test
+
+permissions:
+  contents: write # to commit data/history.json and inbox plans
+
+concurrency:
+  group: jungle-reel
+  cancel-in-progress: false
+
+env:
+  # Change these in Settings → Secrets and variables → Actions → Variables.
+  CLIP_SOURCE: ${{ vars.CLIP_SOURCE || 'veo' }}
+  UPLOAD_MODE: ${{ vars.UPLOAD_MODE || 'schedule' }}
+  PUBLISH_TIME: ${{ vars.PUBLISH_TIME || '18:00' }}
+  PUBLISH_UTC_OFFSET: ${{ vars.PUBLISH_UTC_OFFSET || '5' }}
+  MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
+  SHOT_SECONDS: ${{ vars.SHOT_SECONDS || '6' }}
+  GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL }}
+  GEMINI_IMAGE_MODEL: ${{ vars.GEMINI_IMAGE_MODEL }}
+  VEO_MODEL: ${{ vars.VEO_MODEL }}
+  VEO_FALLBACK: ${{ vars.VEO_FALLBACK }}
+
+jobs:
+  reel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -r requirements.txt
+
+      - name: Make reel
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          MODE: ${{ github.event_name == 'schedule' && 'scheduled' || inputs.mode }}
+        run: |
+          case "$MODE" in
+            test)        python -m jungle.run --sample --clips still --no-upload ;;
+            upload-test) python -m jungle.run --sample --clips still --upload-mode private ;;
+            no-upload)   python -m jungle.run --no-upload ;;
+            publish-now) python -m jungle.run --upload-mode public ;;
+            plan)        python -m jungle.run --plan ;;
+            full)        python -m jungle.run ;;
+            *)           if [ "$CLIP_SOURCE" = "inbox" ]; then python -m jungle.run --plan;
+                         else python -m jungle.run --if-slot-free; fi ;;
+          esac
+
+      - name: Keep the reel for 14 days
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: reel-${{ github.run_number }}
+          path: |
+            out/*/reel.mp4
+            out/*/episode.json
+            out/*/frame*.jpg
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Save history and plans
+        if: always()
+        run: |
+          git config user.name "jungle-bot"
+          git config user.email "jungle-bot@users.noreply.github.com"
+          git add data/history.json inbox
+          if ! git diff --cached --quiet; then
+            git commit -m "Reel $(date -u +%F)"
+            git pull --rebase --autostash && git push
+          fi

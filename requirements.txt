@@ -1,0 +1,6 @@
+google-genai>=2.30
+google-api-python-client>=2.150
+google-auth>=2.35
+google-auth-oauthlib>=1.2
+pillow>=11.0
+numpy>=2.0
