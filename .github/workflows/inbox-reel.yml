@@ -1,7 +1,7 @@
 name: Inbox reel (clips from Google Flow)
 
 # Free mode (CLIP_SOURCE=inbox): when you upload shot1.mp4 ... shot4.mp4 into inbox/<date>/,
-# this assembles the reel and uploads it to YouTube.
+# this assembles the reel and uploads it to YouTube and Facebook.
 on:
   push:
     paths:
@@ -20,7 +20,9 @@ env:
   PUBLISH_TIME: ${{ vars.PUBLISH_TIME || '18:00' }}
   PUBLISH_UTC_OFFSET: ${{ vars.PUBLISH_UTC_OFFSET || '5' }}
   MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
-  SHOT_SECONDS: ${{ vars.SHOT_SECONDS || '6' }}
+  SHOT_SECONDS: ${{ vars.SHOT_SECONDS || '8' }}
+  FACEBOOK_ENABLED: ${{ vars.FACEBOOK_ENABLED || 'true' }}
+  YOUTUBE_ENABLED: ${{ vars.YOUTUBE_ENABLED || 'true' }}
 
 jobs:
   assemble:
@@ -44,6 +46,8 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
         run: python -m jungle.run --from-inbox
 
       - uses: actions/upload-artifact@v5

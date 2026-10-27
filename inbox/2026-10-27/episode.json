@@ -1,0 +1,48 @@
+{
+  "theme": "garmi mein jungle",
+  "title": "Garmi mein Jungle ka haal 🥵😂",
+  "hook": "Jungle mein garmi ka record toot gaya!",
+  "cta": "Is garmi mein TUM kaun ho?",
+  "description": "Garmi itni ke sher ki izzat bhi pighal gayi. Bhaalu fridge se nikalne ko tayyar nahi, aur Chill Bhai ko garmi lagti hi nahi.",
+  "tags": [
+    "garmi",
+    "funny animals",
+    "jungle comedy",
+    "pakistani reels",
+    "cartoon",
+    "summer",
+    "funny shorts",
+    "chill bhai"
+  ],
+  "pinned_comment": "Main to 2 hoon, fridge se nahi nikalna 🧊",
+  "shots": [
+    {
+      "character": "sher",
+      "first_frame": "Sher lies exhausted on a sun-baked rock next to a broken air conditioner and a small blue table fan, tongue hanging out, sweat drops on his face.",
+      "motion": "Sher pants heavily with his tongue wagging, sweat drops roll down, he lifts his head weakly toward the fan then flops back down dramatically. Slow push-in.",
+      "sound": "heavy panting, fan humming, dramatic groan",
+      "caption": "AC bhi gaya... izzat bhi gayi"
+    },
+    {
+      "character": "bhaalu",
+      "first_frame": "Bhaalu sits inside an open fridge in the jungle, eyes closed, licking a pink popsicle, cold mist around him.",
+      "motion": "Bhaalu happily licks his popsicle, sways his head side to side and hugs himself as cold mist flows out of the fridge. Gentle handheld camera.",
+      "sound": "slurping, happy humming, fridge hum",
+      "caption": "Main fridge se bahar NAHI niklunga"
+    },
+    {
+      "character": "hathi",
+      "first_frame": "Hathi stands in a muddy puddle holding a shower head with his trunk, laughing with eyes squeezed shut, water spraying.",
+      "motion": "Hathi swings his trunk spraying water everywhere, flaps his big ears and bounces, splashing in the puddle. Camera tilts up with the spray.",
+      "sound": "water spraying, splashes, giggling",
+      "caption": "Apna shower, apni marzi"
+    },
+    {
+      "character": "chill_bhai",
+      "first_frame": "Chill Bhai stands confidently in a sunny tropical clearing, smug smile, fist raised, sunglasses on.",
+      "motion": "Chill Bhai does a confident little dance with hip sways and fist pumps, tail wiggling, then lowers his sunglasses and winks at the camera.",
+      "sound": "cool whoosh, ukulele strum, a bright ding on the wink",
+      "caption": "Garmi? Kaun si garmi?"
+    }
+  ]
+}

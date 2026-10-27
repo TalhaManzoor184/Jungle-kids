@@ -15,9 +15,10 @@ on:
           full = real reel, public at PUBLISH_TIME · publish-now = real reel, public immediately ·
           no-upload = real reel, kept as a download only · test = sample episode + still frames, needs no keys ·
           upload-test = sample + still frames uploaded PRIVATE to YouTube (checks the YouTube keys) ·
-          plan = inbox mode, write today's Flow prompts
+          plan = inbox mode, write today's Flow prompts ·
+          facebook-test = sample saved as a DRAFT Reel on the Facebook Page (checks the Facebook keys)
         type: choice
-        options: [full, publish-now, no-upload, test, upload-test, plan]
+        options: [full, publish-now, no-upload, test, upload-test, facebook-test, plan]
         default: test
 
 permissions:
@@ -29,7 +30,9 @@ concurrency:
 
 env:
   # Change these in Settings → Secrets and variables → Actions → Variables.
-  CLIP_SOURCE: ${{ vars.CLIP_SOURCE || 'veo' }}
+  CLIP_SOURCE: ${{ vars.CLIP_SOURCE || 'inbox' }}
+  FACEBOOK_ENABLED: ${{ vars.FACEBOOK_ENABLED || 'true' }}
+  YOUTUBE_ENABLED: ${{ vars.YOUTUBE_ENABLED || 'true' }}
   UPLOAD_MODE: ${{ vars.UPLOAD_MODE || 'schedule' }}
   PUBLISH_TIME: ${{ vars.PUBLISH_TIME || '18:00' }}
   PUBLISH_UTC_OFFSET: ${{ vars.PUBLISH_UTC_OFFSET || '5' }}
@@ -63,11 +66,14 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
           MODE: ${{ github.event_name == 'schedule' && 'scheduled' || inputs.mode }}
         run: |
           case "$MODE" in
             test)        python -m jungle.run --sample --clips still --no-upload ;;
             upload-test) python -m jungle.run --sample --clips still --upload-mode private ;;
+            facebook-test) YOUTUBE_ENABLED=false python -m jungle.run --sample --clips still --upload-mode private ;;
             no-upload)   python -m jungle.run --no-upload ;;
             publish-now) python -m jungle.run --upload-mode public ;;
             plan)        python -m jungle.run --plan ;;

@@ -28,7 +28,7 @@ def opt(name: str, default: str = "") -> str:
 def req(name: str) -> str:
     v = os.environ.get(name, "").strip()
     if not v:
-        raise SystemExit(f"Missing {name}. Add it to .env (local) or the GitHub repository secrets.")
+        raise RuntimeError(f"Missing {name}. Add it to .env (local) or the GitHub repository secrets.")
     return v
 
 

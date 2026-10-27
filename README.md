@@ -11,7 +11,8 @@ Every day GitHub Actions makes one 25–30 second vertical reel and uploads it t
 3. **Clips** — Veo 3.1 Lite animates each frame into a 6-second 9:16 clip with sound effects.
 4. **Reel** — `jungle/assemble.py` adds the hook, character name tags and captions, flash cuts,
    a synthesized ukulele track, and the final **"Tum kaun ho? 1, 2, 3 ya 4?"** grid that drives comments.
-5. **Upload** — private on YouTube, set to go public at 6:00 PM Pakistan time (`PUBLISH_TIME`).
+5. **Upload** — YouTube Shorts (private, goes public at 6:00 PM Pakistan time, `PUBLISH_TIME`) and a
+   Facebook Page Reel scheduled for the same time.
 
 The series rules and cast descriptions live in `cast/bible.md`; the exact look sent with every
 prompt is `CAST_LOOK` in `jungle/config.py`.
@@ -20,8 +21,8 @@ prompt is `CAST_LOOK` in `jungle/config.py`.
 
 | `CLIP_SOURCE` | How clips are made | Cost | You do |
 |---|---|---|---|
-| `veo` (default) | Gemini API: Nano Banana frames + Veo 3.1 Lite | ≈ $1.5 per reel (4 × 6 s × $0.05 + 4 images), ≈ $45/month | nothing |
-| `inbox` | You make the 4 clips in Google Flow with your free daily credits | free | ~10 min a day |
+| `veo` | Gemini API: Nano Banana frames + Veo 3.1 Lite | ≈ $1.5 per reel (4 × 6 s × $0.05 + 4 images), ≈ $45/month | nothing |
+| `inbox` (default) | You make the 4 clips in Google Flow with your free daily credits | free | ~10 min a day |
 
 **Inbox mode:** each day the scheduled run writes `inbox/<date>/PROMPTS.md` with the 4 image and
 video prompts. Make the clips in Flow (Veo 3.1 Lite, 9:16, add the `cast/*.png` image as first frame),
@@ -31,6 +32,14 @@ reel, then deletes the clips to keep the repo small.
 
 Veo has no free API tier and Flow credits can't be used from the API, which is why the fully automatic
 mode is paid. Prices change; check the Gemini API pricing page before switching it on.
+
+## Daily routine (inbox mode)
+
+1. Get today's prompts: `inbox/<date>/PROMPTS.md` (written every afternoon when `GEMINI_API_KEY` is set —
+   the free tier is enough), or ask Claude in chat for today's Jungle Kids prompts.
+2. In Google Flow make the 4 clips (Veo 3.1 Lite, 9:16, x1, cast image as first frame) — 40 of the 50 daily credits.
+3. Upload `shot1.mp4` … `shot4.mp4` to `inbox/<date>/` on GitHub (or send them to Claude in chat, which
+   pushes them there). The **Inbox reel** workflow assembles the reel and schedules it on YouTube and Facebook.
 
 ## Setup
 
@@ -53,22 +62,35 @@ Pick the Jungle Kids channel in the browser. The script prints the three secrets
 > If uploads stay private, the project needs YouTube's API audit (Sunny's project already uploads, so
 > reusing its client avoids this).
 
-### 3. GitHub secrets (Settings → Secrets and variables → Actions → Secrets)
-`GEMINI_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`
+### 3. Facebook Page Reels (optional)
+Reuse Sunny's Meta app or create one (use case *Manage everything on your Page*, app in Live mode). In
+Graph API Explorer get a User token with `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
+for the Jungle Kids Page, then:
 
-### 4. Optional variables (same page → Variables)
+```bash
+python scripts/facebook_auth.py APP_ID APP_SECRET
+```
+
+It prints `FACEBOOK_PAGE_ID` and a never-expiring `FACEBOOK_PAGE_TOKEN`. Run the workflow in
+`facebook-test` mode to save the sample as a **draft** Reel. `FACEBOOK_ENABLED=false` pauses Facebook.
+
+### 4. GitHub secrets (Settings → Secrets and variables → Actions → Secrets)
+`GEMINI_API_KEY`, `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`,
+`FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_TOKEN`
+
+### 5. Optional variables (same page → Variables)
 | Variable | Default | Meaning |
 |---|---|---|
-| `CLIP_SOURCE` | `veo` | `veo` or `inbox` |
+| `CLIP_SOURCE` | `inbox` | `inbox` or `veo` |
 | `UPLOAD_MODE` | `schedule` | `schedule`, `private` (publish by hand) or `public` |
 | `PUBLISH_TIME` | `18:00` | local time the reel goes public |
 | `PUBLISH_UTC_OFFSET` | `5` | Pakistan |
 | `MADE_FOR_KIDS` | `false` | must honestly match the content; `true` turns off comments |
-| `SHOT_SECONDS` | `6` | 4, 6 or 8 (Veo); longer = more cost |
+| `SHOT_SECONDS` | `6` (`8` for inbox) | seconds used from each clip; Veo API accepts 4, 6 or 8 |
 | `VEO_MODEL` | `veo-3.1-lite-generate-preview` | e.g. `veo-3.1-fast-generate-preview` for better motion |
 | `GEMINI_TEXT_MODEL` / `GEMINI_IMAGE_MODEL` | see `jungle/config.py` | model overrides |
 
-### 5. First runs (Actions → Daily Jungle Kids reel → Run workflow)
+### 6. First runs (Actions → Daily Jungle Kids reel → Run workflow)
 1. `test` — sample episode with still frames, no keys needed. Download the reel from the run's artifacts.
 2. `upload-test` — same sample uploaded **private** to YouTube; checks the YouTube secrets.
 3. `no-upload` — a real episode (uses Gemini + Veo), kept as an artifact so you can judge quality.

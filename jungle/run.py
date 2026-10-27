@@ -53,14 +53,39 @@ def finish(day: str, episode: dict, reel: Path, entries: list[dict], no_upload: 
     if no_upload:
         summary("Upload skipped (--no-upload).")
         return
-    from .upload import upload
+    from . import facebook
+    from .upload import publish_at_iso, upload
 
-    res = upload(reel, episode, mode)
-    url = f"https://youtube.com/shorts/{res['videoId']}"
-    when = f"goes public at {res['publishAt']} (UTC)" if res.get("publishAt") else res["privacy"]
-    summary(f"Uploaded: {url} — {when}\n\nSuggested pinned comment: **{episode.get('pinned_comment', '')}**")
-    if mode != "private":  # private test uploads do not take the day's slot
-        history.add(entries, {"date": day, "theme": episode["theme"], "title": episode["title"], "videoId": res["videoId"]})
+    entry = {"date": day, "theme": episode["theme"], "title": episode["title"]}
+    errors = []
+    mode = mode or config.UPLOAD_MODE
+    publish_at = publish_at_iso() if mode == "schedule" else None
+
+    if config.opt("YOUTUBE_ENABLED", "true") != "false":
+        try:
+            res = upload(reel, episode, mode)
+            entry["videoId"] = res["videoId"]
+            when = f"goes public at {res['publishAt']} (UTC)" if res.get("publishAt") else res["privacy"]
+            summary(f"YouTube: https://youtube.com/shorts/{res['videoId']} — {when}")
+        except Exception as err:  # noqa: BLE001 - still try Facebook
+            errors.append(f"YouTube: {err}")
+            summary(f"YouTube upload FAILED: {err}")
+
+    if facebook.configured():
+        try:
+            fb = facebook.upload_reel(reel, episode, publish_at, draft=mode == "private")
+            entry["facebookId"] = fb["videoId"]
+            entry.setdefault("videoId", fb["videoId"])
+            summary(f"Facebook Reel {fb['videoId']} — {fb['state']}")
+        except Exception as err:  # noqa: BLE001
+            errors.append(f"Facebook: {err}")
+            summary(f"Facebook upload FAILED: {err}")
+
+    summary(f"\nSuggested pinned comment: **{episode.get('pinned_comment', '')}**")
+    if mode != "private" and entry.get("videoId"):  # private test uploads do not take the day's slot
+        history.add(entries, entry)
+    if errors:
+        raise RuntimeError("; ".join(errors))
 
 
 def run_full(args) -> None:
@@ -87,6 +112,10 @@ def run_plan(args) -> None:
         return
     if history.slot_taken(entries, day):
         summary(f"Reel for {day} already uploaded; no plan needed.")
+        return
+    if not args.sample and not config.opt("GEMINI_API_KEY"):
+        summary("No GEMINI_API_KEY secret, so no automatic plan today. Ask Claude in chat for today's prompts, "
+                "or add the (free-tier) Gemini key to get PROMPTS.md here every day.")
         return
     day_dir.mkdir(parents=True, exist_ok=True)
     episode = get_episode(args.sample, entries)
