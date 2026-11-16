@@ -55,7 +55,7 @@ jobs:
         with:
           name: inbox-reel-${{ github.run_number }}
           path: out/*/reel.mp4
-          retention-days: 14
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Save history

@@ -91,7 +91,7 @@ jobs:
             out/*/reel.mp4
             out/*/episode.json
             out/*/frame*.jpg
-          retention-days: 14
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Save history and plans
