@@ -50,7 +50,8 @@ jobs:
           FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
         run: python -m jungle.run --from-inbox
 
-      - uses: actions/upload-artifact@v5
+      - continue-on-error: true # a full artifact quota must not fail the run
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: inbox-reel-${{ github.run_number }}

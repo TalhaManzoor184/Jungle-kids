@@ -84,6 +84,7 @@ jobs:
 
       - name: Keep the reel for 14 days
         if: always()
+        continue-on-error: true # a full artifact quota must not fail the run
         uses: actions/upload-artifact@v5
         with:
           name: reel-${{ github.run_number }}
